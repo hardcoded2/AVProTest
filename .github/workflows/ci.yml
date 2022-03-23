@@ -96,10 +96,6 @@ jobs:
       - name: unity android build
         run: |
           /opt/Unity/${{ matrix.unity-version-matrix }}/Editor/Unity -quit -batchMode -buildTarget Android -logFile -noGraphics -executeMethod TestBuilder.Build || exit 0
-      - name: unity android try again for lulz, although i think it's an encoding thing with oggs maybe
-        run: |
-          /opt/Unity/${{ matrix.unity-version-matrix }}/Editor/Unity -quit -batchMode -buildTarget Android -logFile -noGraphics -executeMethod TestBuilder.Build || exit 0
-          
       #- name: Build Unity through other builder
       #  uses: kuler90/build-unity@v1
       #  continue-on-error: true 
