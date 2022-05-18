@@ -197,6 +197,22 @@ typedef struct
 	float ty;
 } AVPAffineTransform;
 
+typedef NS_OPTIONS(int, AVPPlayerVideoTrackFlags)
+{
+	AVPPlayerVideoTrackFlagsNone     = 0,
+	AVPPlayerVideoTrackFlagsHasAlpha = 1 << 0,
+};
+
+// Version of simd_float4x4 with relaxed alignment requirements. Allows for passing Matrix4x4 through from
+// Unity. Probably not remotely useful otherwise.
+typedef struct { simd_packed_float4 columns[4]; } simd_packed_float4x4;
+
+#ifdef __x86_64__
+typedef simd_packed_float4x4 Matrix4x4;
+#else
+typedef simd_float4x4 Matrix4x4;
+#endif
+
 typedef struct
 {
 	unichar * _Nullable name;
@@ -210,9 +226,10 @@ typedef struct
 	float frameRate;
 	AVPAffineTransform transform;
 	AVPPlayerVideoTrackStereoMode stereoMode;
-	int future[2];
+	int bitsPerComponent;
+	AVPPlayerVideoTrackFlags videoTrackFlags;
 
-	simd_float4x4 yCbCrTransform;
+	Matrix4x4 yCbCrTransform;
 } AVPPlayerVideoTrackInfo;
 
 /// Audio channel bitmap
@@ -264,7 +281,6 @@ typedef struct
 	float estimatedDataRate;
 	uint32_t codecSubtype;
 	AVPPlayerTrackFlags flags;
-
 } AVPPlayerTextTrackInfo;
 
 typedef NS_ENUM(int, AVPPlayerTrackType)

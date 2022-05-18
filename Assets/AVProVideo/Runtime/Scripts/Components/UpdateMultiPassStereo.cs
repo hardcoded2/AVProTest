@@ -42,6 +42,9 @@ namespace RenderHeads.Media.AVProVideo
 
 		private static bool IsMultiPassVrEnabled()
 		{
+			#if UNITY_TVOS
+				return false;
+			#else
 			#if UNITY_2017_2_OR_NEWER
 			if (!UnityEngine.XR.XRSettings.enabled) return false;
 			#endif
@@ -51,6 +54,7 @@ namespace RenderHeads.Media.AVProVideo
 			#endif
 
 			return true;
+			#endif
 		}
 
 		// We do a LateUpdate() to allow for any changes in the camera position that may have happened in Update()

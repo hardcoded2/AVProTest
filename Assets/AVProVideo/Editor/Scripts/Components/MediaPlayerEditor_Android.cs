@@ -24,12 +24,12 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private readonly static FieldDescription _optionUseFastOesPath = new FieldDescription(".useFastOesPath", new GUIContent("Use OES Rendering", "Enables a faster rendering path using OES textures.  This requires that all rendering in Unity uses special GLSL shaders."));
 		private readonly static FieldDescription _optionShowPosterFrames = new FieldDescription(".showPosterFrame", new GUIContent("Show Poster Frame", "Allows a paused loaded video to display the initial frame. This uses up decoder resources."));
 		private readonly static FieldDescription _optionPreferSoftwareDecoder = new FieldDescription(".preferSoftwareDecoder", GUIContent.none);
-		private readonly static FieldDescription _optionPreferredMaximumResolution = new FieldDescription(".preferredMaximumResolution", new GUIContent("Preferred Maximum Resolution", "The desired maximum resolution of the video."));
+		private readonly static FieldDescription _optionPreferredMaximumResolution = new FieldDescription("._preferredMaximumResolution", new GUIContent("Preferred Maximum Resolution", "The desired maximum resolution of the video."));
 #if UNITY_2017_2_OR_NEWER
-		private readonly static FieldDescription _optionCustomPreferredMaxResolution = new FieldDescription(".customPreferredMaximumResolution", new GUIContent(" "));
+		private readonly static FieldDescription _optionCustomPreferredMaxResolution = new FieldDescription("._customPreferredMaximumResolution", new GUIContent(" "));
 #endif
-		private readonly static FieldDescription _optionCustomPreferredPeakBitRate = new FieldDescription(".preferredPeakBitRate", new GUIContent("Preferred Peak BitRate", "The desired limit of network bandwidth consumption for playback, set to 0 for no preference."));
-		private readonly static FieldDescription _optionCustomPreferredPeakBitRateUnits = new FieldDescription(".preferredPeakBitRateUnits", new GUIContent());
+		private readonly static FieldDescription _optionCustomPreferredPeakBitRate = new FieldDescription("._preferredPeakBitRate", new GUIContent("Preferred Peak BitRate", "The desired limit of network bandwidth consumption for playback, set to 0 for no preference."));
+		private readonly static FieldDescription _optionCustomPreferredPeakBitRateUnits = new FieldDescription("._preferredPeakBitRateUnits", new GUIContent());
 
 		private readonly static FieldDescription _optionMinBufferMs = new FieldDescription(".minBufferMs", new GUIContent("Minimum Buffer Ms"));
 		private readonly static FieldDescription _optionMaxBufferMs = new FieldDescription(".maxBufferMs", new GUIContent("Maximum Buffer Ms"));
@@ -126,30 +126,27 @@ namespace RenderHeads.Media.AVProVideo.Editor
 
 				DisplayPlatformOption(optionsVarName, _optionStartMaxBitrate);
 
-				if (_showUltraOptions)
 				{
+					SerializedProperty preferredMaximumResolutionProp = DisplayPlatformOption(optionsVarName, _optionPreferredMaximumResolution);
+					if ((MediaPlayer.OptionsAndroid.Resolution)preferredMaximumResolutionProp.intValue == MediaPlayer.OptionsAndroid.Resolution.Custom)
 					{
-						SerializedProperty preferredMaximumResolutionProp = DisplayPlatformOption(optionsVarName, _optionPreferredMaximumResolution);
-						if ((MediaPlayer.OptionsAndroid.Resolution)preferredMaximumResolutionProp.intValue == MediaPlayer.OptionsAndroid.Resolution.Custom)
-						{
 #if UNITY_2017_2_OR_NEWER
-							DisplayPlatformOption(optionsVarName, _optionCustomPreferredMaxResolution);
+						DisplayPlatformOption(optionsVarName, _optionCustomPreferredMaxResolution);
 #endif
-						}
 					}
-
-					{
-						EditorGUILayout.BeginHorizontal();
-						DisplayPlatformOption(optionsVarName, _optionCustomPreferredPeakBitRate);
-						DisplayPlatformOption(optionsVarName, _optionCustomPreferredPeakBitRateUnits);
-						EditorGUILayout.EndHorizontal();
-					}
-
-					DisplayPlatformOption(optionsVarName, _optionMinBufferMs);
-					DisplayPlatformOption(optionsVarName, _optionMaxBufferMs);
-					DisplayPlatformOption(optionsVarName, _optionBufferForPlaybackMs);
-					DisplayPlatformOption(optionsVarName, _optionBufferForPlaybackAfterRebufferMs);
 				}
+
+				{
+					EditorGUILayout.BeginHorizontal();
+					DisplayPlatformOption(optionsVarName, _optionCustomPreferredPeakBitRate);
+					DisplayPlatformOption(optionsVarName, _optionCustomPreferredPeakBitRateUnits);
+					EditorGUILayout.EndHorizontal();
+				}
+
+				DisplayPlatformOption(optionsVarName, _optionMinBufferMs);
+				DisplayPlatformOption(optionsVarName, _optionMaxBufferMs);
+				DisplayPlatformOption(optionsVarName, _optionBufferForPlaybackMs);
+				DisplayPlatformOption(optionsVarName, _optionBufferForPlaybackAfterRebufferMs);
 
 				EditorGUILayout.EndVertical();
 			}

@@ -358,13 +358,16 @@ namespace RenderHeads.Media.AVProVideo.Editor
 				{
 					if (textureRect.Contains(Event.current.mousePosition))
 					{
-						if (mediaPlayer.Control.IsPaused())
+						if (mediaPlayer.Control != null)
 						{
-							mediaPlayer.Play();
-						}
-						else
-						{
-							mediaPlayer.Pause();
+							if (mediaPlayer.Control.IsPaused())
+							{
+								mediaPlayer.Play();
+							}
+							else
+							{
+								mediaPlayer.Pause();
+							}
 						}
 					}
 				}
@@ -383,7 +386,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 					Matrix4x4 prevMatrix = GUI.matrix;
 					if (textureSource != null && textureSource.RequiresVerticalFlip())
 					{
-						//	GUIUtility.ScaleAroundPivot(new Vector2(1f, -1f), new Vector2(0, textureRect.y + (textureRect.height / 2)));
+						//	GUIUtility.ScaleAroundPivot(new Vector2(1f, -1f), new Vector2(0f, textureRect.y + (textureRect.height / 2f)));
 					}
 
 					if (!GUI.enabled)
@@ -669,6 +672,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 			{
 				_showPreview = !_showPreview;
 				_queuedToggleShowPreview = false;
+				this.Repaint();
 			}
 		}
 

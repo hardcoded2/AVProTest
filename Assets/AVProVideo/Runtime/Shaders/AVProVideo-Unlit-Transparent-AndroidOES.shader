@@ -65,6 +65,9 @@
 
 	#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
 				texVal = OffsetAlphaPackingUV(_MainTex_TexelSize.xy, texVal.xy, _MainTex_ST.y < 0.0);
+			#if defined(ALPHAPACK_TOP_BOTTOM)
+				texVal.yw = texVal.wy;
+			#endif
 	#endif
 			}
 			#endif
@@ -89,22 +92,29 @@
 				return col * (col * (col * 0.305306011 + 0.682171111) + 0.012522878);
 			}
 #endif
+
 			void main()
 			{
 
-#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
+	#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
 				vec4 col = texture2D(_MainTex, texVal.xy);
-#else
+	#else
 				vec4 col = vec4(1.0, 1.0, 0.0, 1.0);
-#endif
+	#endif
 
-#if defined(APPLY_GAMMA)
+	#if defined(APPLY_GAMMA)
 				col.rgb = GammaToLinear(col.rgb);
-#endif
+	#endif
 
-#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
-				col.a = SamplePackedAlpha(_MainTex, texVal.zw);
-#endif
+	#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
+		#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
+				vec3 rgb = texture2D(_MainTex, texVal.zw).rgb;
+				col.a = (rgb.r + rgb.g + rgb.b) / 3.0;
+		#else
+				col.a = 1.0;
+		#endif
+	#endif
+
 				gl_FragColor = col;
 			}
 			#endif

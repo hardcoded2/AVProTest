@@ -223,7 +223,7 @@ namespace RenderHeads.Media.AVProVideo
 		[SerializeField] bool _playlistAudioMuted = false;
 
 		public override float AudioVolume
-		{ 
+		{
 			get { return _playlistAudioVolume; }
 			set { _playlistAudioVolume = Mathf.Clamp01(value); if (!IsTransitioning() && CurrentPlayer != null) CurrentPlayer.AudioVolume = _playlistAudioVolume; }
 		}
@@ -317,6 +317,10 @@ namespace RenderHeads.Media.AVProVideo
 				{
 					// Immediately complete the transition
 					_transitionTimer = _currentTransitionDuration;
+
+					// Immediately update the audio volume
+					NextPlayer.AudioVolume = this.AudioVolume;
+					CurrentPlayer.AudioVolume = 0f;
 
 					if (_autoCloseVideo)
 					{

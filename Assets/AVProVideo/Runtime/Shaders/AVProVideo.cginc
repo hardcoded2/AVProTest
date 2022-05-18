@@ -179,7 +179,7 @@ FLOAT4 OffsetAlphaPackingUV(FLOAT2 texelSize, FLOAT2 uv, bool flipVertical)
 
 #if defined(ALPHAPACK_TOP_BOTTOM)
 	float offset = texelSize.y * 1.5;
-	result.y = lerp(0.0 + offset, 0.5 - offset, uv.y);
+	result.y = LERP(0.0 + offset, 0.5 - offset, uv.y);
 	result.w = result.y + 0.5;
 
 	if (flipVertical)
@@ -198,7 +198,7 @@ FLOAT4 OffsetAlphaPackingUV(FLOAT2 texelSize, FLOAT2 uv, bool flipVertical)
 
 #elif defined(ALPHAPACK_LEFT_RIGHT)
 	float offset = texelSize.x * 1.5;
-	result.x = lerp(0.0 + offset, 0.5 - offset, uv.x);
+	result.x = LERP(0.0 + offset, 0.5 - offset, uv.x);
 	result.z = result.x + 0.5;
 
 	if (flipVertical)
@@ -292,7 +292,7 @@ INLINE HALF3 GammaToLinear_Accurate(HALF3 col)
 	/*HALF3 a = col / 12.92;
 	HALF3 b = pow((col + 0.055) / 1.055, 2.4);
 	HALF3 c = step(col,0.04045);
-	col = lerp(b, a, c);*/
+	col = LERP(b, a, c);*/
 
 	return col;
 }

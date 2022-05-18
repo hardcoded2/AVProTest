@@ -233,10 +233,13 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override void Update()
 		{
+			Native.AVPPlayerStatus prevStatus = _state.status;
 			Native.AVPPlayerGetState(_player, ref _state);
 
+			Native.AVPPlayerStatus changedStatus = prevStatus ^ _state.status;
+
 			// Need to make sure that lastError is set when status is failed so that the Error event is triggered
-			if (/*BaseMediaPlayer.*/_lastError == ErrorCode.None && _state.status.HasFailed())
+			if (/*BaseMediaPlayer.*/_lastError == ErrorCode.None && changedStatus.HasFailed() && _state.status.HasFailed())
 			{
 				/*BaseMediaPlayer.*/_lastError = ErrorCode.LoadFailed;
 			}
@@ -396,6 +399,14 @@ namespace RenderHeads.Media.AVProVideo
 					_playerSettings.networkFlags = enabled ? _playerSettings.networkFlags | Native.AVPPlayerNetworkSettingsFlags.PlayWithoutBuffering
 														   : _playerSettings.networkFlags & ~Native.AVPPlayerNetworkSettingsFlags.PlayWithoutBuffering;
 				}
+				if (_options.HasChanged(MediaPlayer.OptionsApple.ChangeFlags.PreferredMaximumResolution))
+				{
+					GetWidthHeightFromResolution(
+						_options.preferredMaximumResolution,
+						_options.customPreferredMaximumResolution,
+						out _playerSettings.preferredMaximumResolution_width,
+						out _playerSettings.preferredMaximumResolution_height);
+				}
 
 				Native.AVPPlayerSetPlayerSettings(_player, _playerSettings);
 			}
@@ -527,6 +538,12 @@ namespace RenderHeads.Media.AVProVideo
 				StereoscopicRightLeft,
 			}
 
+			[Flags]
+			internal enum AVPPlayerVideoTrackFlags: int
+			{
+				HasAlpha = 1 << 0,
+			}
+
 			[StructLayout(LayoutKind.Sequential)]
 			internal struct AVPPlayerVideoTrackInfo
 			{
@@ -541,9 +558,8 @@ namespace RenderHeads.Media.AVProVideo
 				internal float frameRate;
 				internal AVPAffineTransform transform;
 				internal AVPPlayerVideoTrackStereoMode stereoMode;
-
-				internal int padding0;
-				internal int padding1;
+				internal int bitsPerComponent;
+				internal AVPPlayerVideoTrackFlags videoTrackFlags;
 
 				internal Matrix4x4 yCbCrTransform;
 			}
@@ -1127,11 +1143,19 @@ namespace RenderHeads.Media.AVProVideo
 
 		public override int GetAudioChannelCount()
 		{
+			int channelCount = -1;
 			if (_state.selectedAudioTrack > -1 && _state.selectedAudioTrack < _audioTrackInfo.Length)
 			{
-				return (int)_audioTrackInfo[_state.selectedAudioTrack].channelCount;
+				channelCount = (int)_audioTrackInfo[_state.selectedAudioTrack].channelCount;
+#if UNITY_IOS && !UNITY_EDITOR
+					if (_options.audioMode == MediaPlayer.OptionsApple.AudioMode.Unity)
+					{
+						// iOS audio capture will convert down to two channel stereo
+						channelCount = Math.Min(channelCount, 2);
+					}
+#endif
 			}
-			return -1;
+			return channelCount;
 		}
 
 		public override AudioChannelMaskFlags GetAudioChannelMask()
@@ -1380,6 +1404,19 @@ namespace RenderHeads.Media.AVProVideo
 			return _playerTexture.flags.IsFlipped();
 		}
 
+		public override TransparencyMode GetTextureTransparency()
+		{
+			if (_state.selectedVideoTrack >= 0)
+			{
+				Native.AVPPlayerVideoTrackInfo info = _videoTrackInfo[_state.selectedVideoTrack];
+				if ((info.videoTrackFlags & Native.AVPPlayerVideoTrackFlags.HasAlpha) == Native.AVPPlayerVideoTrackFlags.HasAlpha)
+				{
+					return TransparencyMode.Transparent;
+				}
+			}
+			return base.GetTextureTransparency();
+		}
+
 		public override Matrix4x4 GetYpCbCrTransform()
 		{
 			if (_videoTrackInfo.Length > 0 && _state.selectedVideoTrack >= 0)
@@ -1565,7 +1602,7 @@ namespace RenderHeads.Media.AVProVideo
 		public override void AddMediaToCache(string url, string headers, MediaCachingOptions options)
 		{
 			Native.MediaCachingOptions nativeOptions = new Native.MediaCachingOptions();
-			GCHandle artworkHandle;
+			GCHandle artworkHandle = new GCHandle();
 
 			if (options != null)
 			{

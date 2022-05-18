@@ -41,6 +41,7 @@ namespace RenderHeads.Media.AVProVideo
 		private bool			_useHapNotchLC = true;
 		private bool			_useTextTrackSupport = true;
 		private bool			_useFacebookAudio360Support = true;
+		private bool			_useAudioDelay = false;
 		private int 			_decoderParallelFrameCount = 3;
 		private int				_decodePrerollFrameCount = 5;
 
@@ -158,20 +159,20 @@ namespace RenderHeads.Media.AVProVideo
 
 		public WindowsMediaPlayer(MediaPlayer.OptionsWindows options) : base()
 		{
-			SetOptions(options.videoApi, options.audioOutput, options.useHardwareDecoding, options.useTextureMips, options.use10BitTextures, options.hintAlphaChannel, options.useLowLatency, options.forceAudioOutputDeviceName, options.preferredFilters, options.useCustomMovParser, options.parallelFrameCount, options.prerollFrameCount, options.useHapNotchLC, options.useStereoDetection, options.useTextTrackSupport, options.useFacebookAudio360Support, options.bufferedFrameSelection, options.pauseOnPrerollComplete);
+			SetOptions(options.videoApi, options.audioOutput, options.useHardwareDecoding, options.useTextureMips, options.use10BitTextures, options.hintAlphaChannel, options.useLowLatency, options.forceAudioOutputDeviceName, options.preferredFilters, options.useCustomMovParser, options.parallelFrameCount, options.prerollFrameCount, options.useHapNotchLC, options.useStereoDetection, options.useTextTrackSupport, options.useFacebookAudio360Support, options.bufferedFrameSelection, options.pauseOnPrerollComplete, options.useAudioDelay);
 		}
 
 		public WindowsMediaPlayer(MediaPlayer.OptionsWindowsUWP options) : base()
 		{
 			Windows.VideoApi api = (options.videoApi == WindowsUWP.VideoApi.MediaFoundation)?Windows.VideoApi.MediaFoundation:Windows.VideoApi.WinRT;
 			Windows.AudioOutput audioOutput = (Windows.AudioOutput)(int)options.audioOutput;
-			SetOptions(api, audioOutput, options.useHardwareDecoding, options.useTextureMips, options.use10BitTextures, false, options.useLowLatency, string.Empty, null, false, 1, 0, false, true, false, true, BufferedFrameSelectionMode.None, false);
+			SetOptions(api, audioOutput, options.useHardwareDecoding, options.useTextureMips, options.use10BitTextures, false, options.useLowLatency, string.Empty, null, false, 1, 0, false, true, false, true, BufferedFrameSelectionMode.None, false, false);
 		}
 
 		public void SetOptions(Windows.VideoApi videoApi, Windows.AudioOutput audioOutput, bool useHardwareDecoding, bool useTextureMips, bool use10BitTextures, bool hintAlphaChannel, 
 								bool useLowLatency, string audioDeviceOutputName, List<string> preferredFilters, bool useCustomMovParser, int parallelFrameCount, int prerollFrameCount, 
 								bool useHapNotchLC, bool useStereoDetection, bool useTextTrackSupport, bool useFacebookAudio360Support,
-								BufferedFrameSelectionMode bufferedFrameSelection, bool pauseOnPrerollComplete)
+								BufferedFrameSelectionMode bufferedFrameSelection, bool pauseOnPrerollComplete, bool useAudioDelay)
 		{
 			_videoApi = videoApi;
 			_audioOutput = audioOutput;
@@ -189,6 +190,7 @@ namespace RenderHeads.Media.AVProVideo
 			_useCustomMovParser = useCustomMovParser;
 			_decoderParallelFrameCount = parallelFrameCount;
 			_decodePrerollFrameCount = prerollFrameCount;
+			_useAudioDelay = useAudioDelay;
 			_audioDeviceOutputName = audioDeviceOutputName;
 			if (!string.IsNullOrEmpty(_audioDeviceOutputName))
 			{
@@ -252,6 +254,7 @@ namespace RenderHeads.Media.AVProVideo
 				Native.SetFrameBufferingEnabled(_instance, (_frameSelectionMode != BufferedFrameSelectionMode.None), _pauseOnPrerollComplete);
 				Native.SetStereoDetectEnabled(_instance, _useStereoDetection);
 				Native.SetTextTrackSupportEnabled(_instance, _useTextTrackSupport);
+				Native.SetAudioDelayEnabled(_instance, _useAudioDelay, true, 0.0);
 				Native.SetFacebookAudio360SupportEnabled(_instance, _useFacebookAudio360Support);
 				Native.SetDecoderHints(_instance, _decoderParallelFrameCount, _decodePrerollFrameCount);
 				_instance = Native.EndOpenSource(_instance, path);
@@ -1378,6 +1381,9 @@ namespace RenderHeads.Media.AVProVideo
 
 			[DllImport("AVProVideo")]
 			public static extern void SetTextTrackSupportEnabled(System.IntPtr instance, bool enabled);
+
+			[DllImport("AVProVideo")]
+			public static extern void SetAudioDelayEnabled(System.IntPtr instance, bool enabled, bool isAutomatic, double timeSeconds);
 
 			[DllImport("AVProVideo")]
 			public static extern void SetFacebookAudio360SupportEnabled(System.IntPtr instance, bool enabled);

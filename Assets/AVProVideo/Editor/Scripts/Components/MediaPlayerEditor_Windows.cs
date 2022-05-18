@@ -39,6 +39,7 @@ namespace RenderHeads.Media.AVProVideo.Editor
 		private readonly static FieldDescription _optionUseHardwareDecoding = new FieldDescription(".useHardwareDecoding", new GUIContent("Hardware Decoding"));
 		private readonly static FieldDescription _optionUseStereoDetection = new FieldDescription(".useStereoDetection", new GUIContent("Use Stereo Detection", "Disable if no stereo detection is required"));
 		private readonly static FieldDescription _optionUseTextTrackSupport = new FieldDescription(".useTextTrackSupport", new GUIContent("Use Text Tracks", "Disable if no text tracks are required"));
+		private readonly static FieldDescription _optionUseAudioDelay = new FieldDescription(".useAudioDelay", new GUIContent("Use Audio Delay", "Allows audio to be offset"));
 		private readonly static FieldDescription _optionUseFacebookAudio360Support = new FieldDescription(".useFacebookAudio360Support", new GUIContent("Use Facebook Audio 360", "Disable if no Facebook Audio 360 support is required for"));
 #if AVPROVIDEO_SUPPORT_BUFFERED_DISPLAY
 		private readonly static FieldDescription _optionPauseOnPrerollComplete = new FieldDescription(".pauseOnPrerollComplete", new GUIContent("Pause On Preroll Complete", "Internally pause once preroll is completed.  This is useful for syncing video playback to make sure all players are prerolled"));
@@ -124,6 +125,12 @@ namespace RenderHeads.Media.AVProVideo.Editor
 				}
 				// Audio Output
 				{
+					SerializedProperty propAudioDelay = DisplayPlatformOption(optionsVarName, _optionUseAudioDelay);
+					if (propAudioDelay.boolValue)
+					{
+						//EditorGUI.indentLevel++;
+						//EditorGUI.indentLevel--;
+					}
 					DisplayPlatformOption(optionsVarName, _optionUseFacebookAudio360Support);
 					SerializedProperty propAudioOutput = DisplayPlatformOptionEnum(optionsVarName, _optionAudioOutput, _audioModesWindows);
 					if (_showUltraOptions && (Windows.AudioOutput)propAudioOutput.enumValueIndex == Windows.AudioOutput.FacebookAudio360)
