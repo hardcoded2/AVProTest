@@ -145,6 +145,7 @@ namespace RenderHeads.Media.AVProVideo
 		public virtual float[]		GetTextureTransform() { return new float[] { 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f }; }
 		/// <inheritdoc/>
 		public virtual Matrix4x4	GetYpCbCrTransform() { return Matrix4x4.identity; }
+
 		public StereoPacking GetTextureStereoPacking()
 		{
 			StereoPacking result = InternalGetTextureStereoPacking();
@@ -157,7 +158,7 @@ namespace RenderHeads.Media.AVProVideo
 		}
 		internal abstract StereoPacking InternalGetTextureStereoPacking();
 
-		public TransparencyMode GetTextureTransparency()
+		public virtual TransparencyMode GetTextureTransparency()
 		{
 			return _mediaHints.transparency;
 		}
@@ -280,7 +281,9 @@ namespace RenderHeads.Media.AVProVideo
 
 		public ErrorCode GetLastError()
 		{
-			return _lastError;
+			ErrorCode errorCode = _lastError;
+			_lastError = ErrorCode.None;
+			return errorCode;
 		}
 
 		/// <inheritdoc/>

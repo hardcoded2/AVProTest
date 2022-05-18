@@ -131,6 +131,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 				{
 					return true;
 				}
+				#if (!ENABLE_INPUT_SYSTEM || ENABLE_LEGACY_INPUT_MANAGER)
 				bool touchInput = (Input.touchSupported && Input.touchCount > 0);
 				bool mouseInput = (Input.mousePresent && (Input.mousePosition != _previousMousePos || Input.mouseScrollDelta != Vector2.zero || Input.GetMouseButton(0)));
 
@@ -142,6 +143,9 @@ namespace RenderHeads.Media.AVProVideo.Demos
 				}
 
 				return false;
+				#else
+				return true;
+				#endif
 			}
 		}
 
@@ -666,6 +670,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 			{
 				result = false;
 			}
+			#if (!ENABLE_INPUT_SYSTEM || ENABLE_LEGACY_INPUT_MANAGER)
 			else if (Input.mousePresent)
 			{
 				// Check whether the mouse cursor is over the controls, in which case we can't hide the UI
@@ -676,6 +681,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 				Rect rr = RectTransformUtility.PixelAdjustRect(rect, null);
 				result = !rr.Contains(canvasPos);
 			}
+			#endif
 			return result;
 		}
 
@@ -737,6 +743,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 				TimeRange timelineRange = GetTimelineRange();
 
 				// Update timeline hover popup
+				#if (!ENABLE_INPUT_SYSTEM || ENABLE_LEGACY_INPUT_MANAGER)
 				if (_timelineTip != null)
 				{
 					if (_isHoveringOverTimeline)
@@ -796,6 +803,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 						_segmentsSeek.gameObject.SetActive(false);
 					}
 				}
+				#endif
 
 				// Updated stalled display
 				if (_overlayManager)
@@ -810,6 +818,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 				// Update keyboard input
 				if (_enableKeyboardControls)
 				{
+					#if (!ENABLE_INPUT_SYSTEM || ENABLE_LEGACY_INPUT_MANAGER)
 					// Keyboard toggle play/pause
 					if (Input.GetKeyDown(KeyTogglePlayPause))
 					{
@@ -841,6 +850,7 @@ namespace RenderHeads.Media.AVProVideo.Demos
 					{
 						ToggleMute();
 					}
+					#endif
 				}
 
 				// Animation play/pause button

@@ -502,6 +502,7 @@ namespace RenderHeads.Media.AVProVideo
 			_lastError = (ErrorCode)Native.GetLastErrorCode(_playerInstance);
 
 			UpdateTimeRanges();
+			UpdateSubtitles();
 			Update_Textures();
 			UpdateDisplayFrameRate();
 

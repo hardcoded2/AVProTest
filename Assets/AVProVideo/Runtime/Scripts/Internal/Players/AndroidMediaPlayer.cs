@@ -65,6 +65,8 @@ namespace RenderHeads.Media.AVProVideo
 		private jvalue[]					m_Value2 = new jvalue[2];
 		private jvalue[]					m_Value4 = new jvalue[4];
 
+		private MediaPlayer.OptionsAndroid	m_Options;
+
 		private enum NativeStereoPacking : int
 		{
 			Unknown = -1,		// Unknown
@@ -168,6 +170,8 @@ namespace RenderHeads.Media.AVProVideo
 			Debug.Assert(s_Interface != null);
 			Debug.Assert(s_bInitialised);
 
+			m_Options = options;
+
 			m_API = options.videoApi;
 
 			if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Vulkan)
@@ -180,12 +184,10 @@ namespace RenderHeads.Media.AVProVideo
 #else
 			Vector2 vPreferredVideo = GetPreferredVideoResolution(options.preferredMaximumResolution, new Vector2(0.0f, 0.0f));
 #endif
-			bool enable360Audio = (options.audioOutput == Android.AudioOutput.FacebookAudio360);
-			bool useUnityAudio = (options.audioOutput == Android.AudioOutput.Unity);
 
 			// Create a java-size video class up front
 			Debug.Log("s_Interface " + s_Interface);
-			m_Video = s_Interface.Call<AndroidJavaObject>( "CreatePlayer", (int)(m_API), options.useFastOesPath, enable360Audio, (int)(options.audio360ChannelMode), options.preferSoftwareDecoder, useUnityAudio, Helper.GetUnityAudioSampleRate(), 
+			m_Video = s_Interface.Call<AndroidJavaObject>( "CreatePlayer", (int)(m_API), options.useFastOesPath, options.preferSoftwareDecoder, (int)(options.audioOutput), (int)(options.audio360ChannelMode), Helper.GetUnityAudioSampleRate(), 
 																		   options.StartWithHighestBandwidth(), options.minBufferMs, options.maxBufferMs, options.bufferForPlaybackMs, options.bufferForPlaybackAfterRebufferMs, 
 																		   (int)(options.GetPreferredPeakBitRateInBitsPerSecond()), (int)(vPreferredVideo.x), (int)(vPreferredVideo.y) );
 			Debug.Log("m_Video " + m_Video);
@@ -262,8 +264,9 @@ namespace RenderHeads.Media.AVProVideo
 			if (m_Video != null)
 			{
 				_mediaHints = mediaHints;
+
 				Debug.Assert(m_Width == 0 && m_Height == 0 && m_Duration == 0.0);
-				bReturn = m_Video.Call<bool>("OpenVideoFromFile", path, offset, httpHeader, forceFileFormat);
+				bReturn = m_Video.Call<bool>("OpenVideoFromFile", path, offset, httpHeader, forceFileFormat, (int)(m_Options.audioOutput), (int)(m_Options.audio360ChannelMode));
 				if (!bReturn)
 				{
 					DisplayLoadFailureSuggestion(path);
@@ -926,7 +929,22 @@ namespace RenderHeads.Media.AVProVideo
 				}
 
 //				_lastError = (ErrorCode)( m_Video.Call<int>("GetLastErrorCode") );
-				_lastError = (ErrorCode)( Native._GetLastErrorCode( m_iPlayerIndex) );
+				_lastError = (ErrorCode)( Native._GetLastErrorCode( m_iPlayerIndex ) );
+			}
+
+			if( m_Options.HasChanged( MediaPlayer.OptionsAndroid.ChangeFlags.All, true ) )
+			{
+				if (m_Video != null)
+				{
+#if UNITY_2017_2_OR_NEWER
+					Vector2 vPreferredVideo = GetPreferredVideoResolution(m_Options.preferredMaximumResolution, m_Options.customPreferredMaximumResolution);
+#else
+					Vector2 vPreferredVideo = GetPreferredVideoResolution(m_Options.preferredMaximumResolution, new Vector2(0.0f, 0.0f));
+#endif
+
+					int iNewBitrate = (int)(m_Options.GetPreferredPeakBitRateInBitsPerSecond());
+					/*bool bSetMaxResolutionAndBitrate =*/ m_Video.Call<bool>("SetPreferredVideoResolutionAndBirate", (int)(vPreferredVideo.x), (int)(vPreferredVideo.y), iNewBitrate);
+				}
 			}
 
 			// Call before the native update call
@@ -1179,27 +1197,8 @@ namespace RenderHeads.Media.AVProVideo
 		{
 			int iReturn = 0;
 
-			if (m_Video != null && buffer != null)
-			{
-				// Atttach thread
-				bool bAttached = Native.JNIAttachCurrentThread();
-
-				// Get audio data
-				float[] outBuffer = m_Video.Call<float[]>("GrabAudio", sampleCount, channelCount);
-
-				// Copy audio data to output buffer
-				if( outBuffer != null )
-				{
-					Array.Copy(outBuffer, buffer, sampleCount);
-					iReturn = sampleCount;
-				}
-
-				if (bAttached)
-				{
-					// Detach thread
-					Native.JNIDetachCurrentThread();
-				}
-			}
+			// Get audio data
+			iReturn = Native._GrabAudioNative( buffer, m_iPlayerIndex, sampleCount, channelCount );
 
 			return iReturn;
 		}
@@ -1434,6 +1433,16 @@ namespace RenderHeads.Media.AVProVideo
 			return vResolution;
 		}
 
+		public override bool IsMediaCachingSupported()
+		{
+			if( m_Video != null )
+			{
+				return m_Video.Call<bool>("IsMediaCachingSupported");
+			}
+
+			return true;
+		}
+
 		public override void AddMediaToCache(string url, string headers, MediaCachingOptions options)
 		{
 			if (m_Video != null)
@@ -1503,8 +1512,9 @@ namespace RenderHeads.Media.AVProVideo
 			[DllImport(LibraryName)]
 			public static extern int _GetCurrentAudioTrackNumChannels( int iPlayerIndex );
 
-//			[DllImport(LibraryName)]
-//			public static extern int _GrabAudio( float[] buffer, int iPlayerIndex, int sampleCount, int channelCount );
+			[DllImport(LibraryName)]
+//			unsafe public static extern int _GrabAudioNative(float* pBuffer, int iPlayerIndex, int sampleCount, int channelCount);
+			public static extern int _GrabAudioNative(float[] pBuffer, int iPlayerIndex, int sampleCount, int channelCount);
 
 			[DllImport (LibraryName)]
 			public static extern int _GetWidth( int iPlayerIndex );
@@ -1542,3 +1552,4 @@ namespace RenderHeads.Media.AVProVideo
 	}
 }
 #endif
+	  

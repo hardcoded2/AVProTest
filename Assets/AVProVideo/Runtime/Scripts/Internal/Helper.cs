@@ -3,20 +3,20 @@ using System.Collections;
 using System.Collections.Generic;
 
 //-----------------------------------------------------------------------------
-// Copyright 2015-2021 RenderHeads Ltd.  All rights reserved.
+// Copyright 2015-2022 RenderHeads Ltd.  All rights reserved.
 //-----------------------------------------------------------------------------
 
 namespace RenderHeads.Media.AVProVideo
 {
 	public static class Helper
 	{
-		public const string AVProVideoVersion = "2.2.3";
+		public const string AVProVideoVersion = "2.5.0";
 		public sealed class ExpectedPluginVersion
 		{
-			public const string Windows      = "2.2.2";
-			public const string WinRT        = "2.2.2";
-			public const string Android      = "2.2.0";
-			public const string Apple        = "2.2.3";
+			public const string Windows      = "2.5.0";
+			public const string WinRT        = "2.5.0";
+			public const string Android      = "2.5.0";
+			public const string Apple        = "2.5.0";
 		}
 
 		public const string UnityBaseTextureName = "_MainTex";

@@ -40,11 +40,11 @@
 			#extension GL_OES_EGL_image_external_essl3 : enable
 			precision mediump float;
 
-			#ifdef VERTEX
-
 #include "UnityCG.glslinc"
 #define SHADERLAB_GLSL
 #include "AVProVideo.cginc"
+
+			#ifdef VERTEX
 
 #if defined(HIGH_QUALITY)
 		varying vec3 texNormal;
@@ -113,11 +113,14 @@
 	#endif
 
 	#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
-				vec4 alphaOffset = OffsetAlphaPackingUV(_MainTex_TexelSize.xy, texVal.xy, _MainTex_ST.y > 0.0);
+				vec4 alphaOffset = OffsetAlphaPackingUV(_MainTex_TexelSize.xy, texVal.xy, _MainTex_ST.y < 0.0);
+		#if defined(ALPHAPACK_TOP_BOTTOM)
+				alphaOffset.yw = alphaOffset.wy;
+		#endif
+
 				texVal.xy = alphaOffset.xy;
 				alphaPackOffset = alphaOffset.zw;
 	#endif
-
 #endif
 
 #if defined(STEREO_DEBUG)
@@ -148,13 +151,6 @@
 			varying vec4 tint;
 #endif
 
-#if defined(APPLY_GAMMA)
-			vec3 GammaToLinear(vec3 col)
-			{
-				return pow(col, vec3(2.2, 2.2, 2.2));
-			}
-#endif
-
 #if defined(HIGH_QUALITY)
 			vec2 NormalToEquiRect(vec3 n)
 			{
@@ -162,7 +158,7 @@
 				const float M_1_2PI = 0.15915494309189533576888376337251; // 2.0/PI
 				vec2 uv;
 				uv.x = 0.5 - atan(n.z, n.x) * M_1_2PI;
-				uv.y = 0.5 - asin(n.y) * M_1_PI;
+				uv.y = 0.5 - asin(-n.y) * M_1_PI;
 				return uv;
 			}
 
@@ -201,7 +197,7 @@
 				uv.xy = NormalToEquiRect(n);
 				uv.x += 0.75;
 				uv.x = mod(uv.x, 1.0);
-				uv.xy = transformTex(uv, _MainTex_ST);
+				uv.xy = transformTex(uv.xy, _MainTex_ST);
 
 	#if defined(LAYOUT_EQUIRECT180)
 				uv.x = ((uv.x - 0.5) * 2.0) + 0.5;
@@ -217,6 +213,9 @@
 
 	#if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
 				uv = OffsetAlphaPackingUV(_MainTex_TexelSize.xy, uv.xy, _MainTex_ST.y < 0.0);
+		#if defined(ALPHAPACK_TOP_BOTTOM)
+				uv.yw = uv.wy;
+		#endif
 	#endif
 #else
 				uv.xy = texVal.xy;
@@ -247,7 +246,16 @@
 #endif
 
 #if defined(ALPHAPACK_TOP_BOTTOM) || defined(ALPHAPACK_LEFT_RIGHT)
-				col.a = SamplePackedAlpha(_MainTex, uv.zw);
+	#if defined(SHADER_API_GLES) || defined(SHADER_API_GLES3)
+		#if __VERSION__ < 300
+				vec3 rgb = texture2D(_MainTex, uv.zw).rgb;
+		#else
+				vec3 rgb = texture(_MainTex, uv.zw).rgb;
+		#endif
+				col.a = (rgb.r + rgb.g + rgb.b) / 3.0;
+	#else
+				col.a = 1.0;
+	#endif
 #endif
 
 #if defined(STEREO_DEBUG)

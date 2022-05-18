@@ -142,7 +142,7 @@
 				const float M_1_2PI = 0.15915494309189533576888376337251; // 2.0/PI
 				vec2 uv;
 				uv.x = 0.5 - atan(n.z, n.x) * M_1_2PI;
-				uv.y = 0.5 - asin(n.y) * M_1_PI;
+				uv.y = 0.5 - asin(-n.y) * M_1_PI;
 				return uv;
 			}
 
