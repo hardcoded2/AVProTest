@@ -4,7 +4,7 @@
 
 name: CI
 
-on: [pull_request,workflow_dispatch]
+on: [pull_request,workflow_dispatch,push]
   
 #  push:
 #    branches:
@@ -22,7 +22,7 @@ jobs:
       LICENSE2021: ${{ secrets.LICENSE_2021 }}
     strategy:
       matrix:
-        unity-version-matrix: [ 2020.3.18f1 ] #2019.4.36f1,2020.3.30f1, 2021.2.14f1 #currently only tested this project with 2020.3.18f1 
+        unity-version-matrix: [ 2019.4.20f1,2019.4.36f1,2020.3.30f1, 2021.2.14f1 ] #2019.4.36f1,2020.3.30f1, 2021.2.14f1 #currently only tested this project with 2020.3.18f1 
 
     steps:
       - name: Checkout AVPro Test
@@ -100,12 +100,12 @@ jobs:
         run: |
           /opt/Unity/${{ matrix.unity-version-matrix }}/Editor/Unity -quit -batchMode -buildTarget Android -logFile -noGraphics -executeMethod TestBuilder.Build || exit 0
           
-      - name: Build Unity through other builder
-        uses: kuler90/build-unity@v1
-        continue-on-error: true 
-        with:
-          build-target: Android
-          build-method: TestBuilder.Build
+      #- name: Build Unity through other builder
+      #  uses: kuler90/build-unity@v1
+      #  continue-on-error: true 
+      #  with:
+      #    build-target: Android
+      #    build-method: TestBuilder.Build
 
 #return license failed - "activated manually for this computer and can't be returned"  https://github.com/hardcoded2/WavePassthroughOverlayExample/runs/5540616684?check_suite_focus=true#step:9:79
 #feels wrong not to do it... just ignore the error code i guess?
